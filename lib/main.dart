@@ -1,7 +1,10 @@
 import 'dart:async';
-import 'dart:developer';
 
+import 'package:firstfluttersample/DynamicTimePicker.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// these is simple State time set CoundownTimer
 
 void main() {
   runApp(const MyApp());
@@ -13,14 +16,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+        debugShowCheckedModeBanner: false,
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: const MyHomePage(title: 'Flutter Demo Home Page'));
   }
 }
 
@@ -38,8 +40,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   late Timer timer;
   static const countdownDuration = Duration(minutes: 10);
-  Duration duration = Duration();
+  Duration duration = const Duration();
   bool countDown = true;
+
+  // final prefrence = SharedPreferences.getInstance();
 
   @override
   void initState() {
@@ -61,61 +65,85 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            buildTime(),
-            SizedBox(
-              height: 80,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                  margin: const EdgeInsets.all(10),
-                  child: OutlinedButton(
-                      onPressed: () {
-                        startTimer();
-                      },
-                      child: Text("Start")),
-                ),
-                Container(
-                  margin: const EdgeInsets.all(10),
-                  child: OutlinedButton(
-                      onPressed: () {
-                        stopTimer();
-                      },
-                      child: Text("Stop")),
-                ),
-                Container(
-                  margin: const EdgeInsets.all(10),
-                  child: OutlinedButton(
-                      onPressed: () {
-                        restartTimer();
-                      },
-                      child: Text("Restart")),
-                )
-              ],
-            )
-          ],
+    Future<bool> OnBackPressd() async {
+      return await showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                    title: Text("Do you Really want to Exit"),
+                    actions: [
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text("No"),
+                      ),
+                      ElevatedButton(
+                          onPressed: () => saveTimeToPrefence(),
+                          child: const Text("Yes"))
+                    ],
+                  )) ??
+          false;
+    }
+
+    return WillPopScope(
+      onWillPop: OnBackPressd,
+      child: Scaffold(
+        appBar: AppBar(
+          // TRY THIS: Try changing the color here to a specific color (to
+          // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+          // change color while the other colors stay the same.
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          title: Text(widget.title),
         ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              buildTime(),
+              const SizedBox(
+                height: 80,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Container(
+                    margin: const EdgeInsets.all(10),
+                    child: OutlinedButton(
+                        onPressed: () {
+                          startTimer();
+                        },
+                        child: const Text("Start")),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.all(10),
+                    child: OutlinedButton(
+                        onPressed: () {
+                          stopTimer();
+                        },
+                        child: const Text("Stop")),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.all(10),
+                    child: OutlinedButton(
+                        onPressed: () {
+                          restartTimer();
+                        },
+                        child: const Text("Restart")),
+                  )
+                ],
+              )
+            ],
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const DynamicTimePicker())),
+          tooltip: 'Increment',
+          child: const Icon(Icons.add),
+        ), // This trailing comma makes auto-formatting nicer for build methods.
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
@@ -126,11 +154,11 @@ class _MyHomePageState extends State<MyHomePage> {
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       buildTimeCard(time: hours, header: 'HOURS'),
-      SizedBox(
+      const SizedBox(
         width: 8,
       ),
       buildTimeCard(time: minutes, header: 'MINUTES'),
-      SizedBox(
+      const SizedBox(
         width: 8,
       ),
       buildTimeCard(time: seconds, header: 'SECONDS'),
@@ -142,21 +170,21 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
                 color: Colors.white, borderRadius: BorderRadius.circular(20)),
             child: Text(
               time,
-              style: TextStyle(
+              style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                   fontSize: 50),
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 24,
           ),
-          Text(header, style: TextStyle(color: Colors.black45)),
+          Text(header, style: const TextStyle(color: Colors.black45)),
         ],
       );
 
@@ -165,14 +193,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void startTimer() {
-    timer = Timer.periodic(Duration(seconds: 1), (_) => addTime());
+    timer = Timer.periodic(const Duration(seconds: 1), (_) => addTime());
   }
 
   void reseTimer() {
     if (countDown) {
       setState(() => duration = countdownDuration);
     } else {
-      setState(() => duration = Duration());
+      setState(() => duration = const Duration());
     }
   }
 
@@ -192,7 +220,15 @@ class _MyHomePageState extends State<MyHomePage> {
     if (countDown) {
       setState(() => duration = countdownDuration);
     } else {
-      setState(() => duration = Duration());
+      setState(() => duration = const Duration());
     }
+  }
+
+  saveTimeToPrefence() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.setString("ExitTime", "value");
+    setState(() {
+      Navigator.of(context).pop(true);
+    });
   }
 }
